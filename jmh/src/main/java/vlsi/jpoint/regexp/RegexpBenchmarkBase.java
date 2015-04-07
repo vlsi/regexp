@@ -10,9 +10,11 @@ import org.jcodings.specific.UTF8Encoding;
 import org.joni.Option;
 import org.joni.Regex;
 import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.infra.Blackhole;
 
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -29,7 +31,7 @@ public class RegexpBenchmarkBase {
   String patternString;
   String sourceString;
 
-  Runnable matcher;
+  Consumer<Blackhole> matcher;
 
   public final void init() throws Throwable {
     System.out.println("patternString = " + patternString);
@@ -37,22 +39,22 @@ public class RegexpBenchmarkBase {
     if ("java".equals(impl)) {
       Pattern p = Pattern.compile(patternString);
 
-      matcher = () -> {
-        p.matcher(sourceString).matches();
+      matcher = (Blackhole b) -> {
+        b.consume(p.matcher(sourceString).matches());
       };
     } else if ("tcl".equals(impl)) {
       RePattern p = HsrePattern.compile(patternString, PatternFlags.ADVANCED);
 
-      matcher = () -> {
-        p.matcher(sourceString).matches();
+      matcher = (Blackhole b) -> {
+        b.consume(p.matcher(sourceString).matches());
       };
     } else if ("joni".equals(impl)) {
       byte[] pattern = patternString.getBytes(Charsets.UTF_8);
       Regex p = new Regex(pattern, 0, pattern.length, Option.NONE, UTF8Encoding.INSTANCE);
 
-      matcher = () -> {
+      matcher = (Blackhole b) -> {
         byte[] bytes = sourceString.getBytes(Charsets.UTF_8);
-        int search = p.matcher(bytes).search(0, bytes.length, Option.DEFAULT);
+        b.consume(p.matcher(bytes).search(0, bytes.length, Option.DEFAULT));
       };
     } else {
       throw new IllegalArgumentException("Unknown regex engine " + impl);

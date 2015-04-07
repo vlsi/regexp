@@ -3,6 +3,7 @@ package vlsi.jpoint.regexp;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.infra.Blackhole;
 
 import java.util.Collections;
 import java.util.stream.Collectors;
@@ -28,7 +29,7 @@ public class Bqbqbb extends RegexpBenchmarkBase {
   }
 
   @Benchmark
-  public void run() {
-    matcher.run();
+  public void run(Blackhole b) {
+    matcher.accept(b);
   }
 }
